@@ -41,7 +41,8 @@ inverted_index = build_inverted_index(dataset)
 # Print the inverted index
 for term, postings in inverted_index.items():
     print(f'{term}: {postings}')
-
+#print(inverted_index)
+print('Number of Terms :',len(inverted_index))
 
 def boolean_retrieval(query, inverted_index):
     query_terms = query.split()
@@ -58,11 +59,11 @@ def boolean_retrieval(query, inverted_index):
         elif term == 'NOT':
             operator = 'NOT'
             continue
-        elif term == 'NAND':
-            operator = 'NAND'
+        elif term == 'AND_NOT':
+            operator = 'AND_NOT'
             continue
-        elif term == 'NOR':
-            operator = 'NOR'
+        elif term == 'OR_NOT':
+            operator = 'OR_NOT'
             continue
 
         term = preprocess(term)
@@ -72,22 +73,22 @@ def boolean_retrieval(query, inverted_index):
             result = result.intersection(term_postings) if result else term_postings
         elif operator == 'OR':
             result = result.union(term_postings) if result else term_postings
-        elif operator == 'NOR':
+        elif operator == 'OR_NOT':
             result = result.difference(term_postings) if result else set()
-        elif operator == 'NAND':
+        elif operator == 'AND_NOT':
             result = set(range(max(inverted_index.values())[0] + 1)).difference(term_postings)
         else:
             result = term_postings
 
     return result
 
-# Example usage
-
-query = 'around OR of'
-print(f'Documents satisfying the query "{query}": {sorted(boolean_retrieval(query, inverted_index))}')
 query = 'around AND of'
 print(f'Documents satisfying the query "{query}": {sorted(boolean_retrieval(query, inverted_index))}')
-query = 'around NAND of'
+query = 'around OR of'
 print(f'Documents satisfying the query "{query}": {sorted(boolean_retrieval(query, inverted_index))}')
-query = 'around NOR of'
+query = 'around AND_NOT of'
 print(f'Documents satisfying the query "{query}": {sorted(boolean_retrieval(query, inverted_index))}')
+query = 'around OR_NOT of'
+print(f'Documents satisfying the query "{query}": {sorted(boolean_retrieval(query, inverted_index))}')
+
+
