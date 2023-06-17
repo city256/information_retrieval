@@ -3,12 +3,11 @@ import re
 from collections import defaultdict
 import math
 
+doc_len = defaultdict(lambda: defaultdict(int))
+
 def preprocess(document):
-    # Remove punctuations and numbers
     document = re.sub(r'[^a-zA-Z\s]', '', document)
-    # Normalize to upper case
     document = document.upper()
-    # Tokenize by splitting on whitespace
     tokens = document.split()
     return tokens
 
@@ -19,6 +18,7 @@ def build_index(directory):
             with open(os.path.join(directory, filename), 'r', encoding='utf-8', errors='ignore') as f:
                 document = f.read()
                 tokens = preprocess(document)
+                doc_len[filename] = len(tokens)
                 for token in tokens:
                     index[token][filename] += 1
     return index
@@ -42,14 +42,21 @@ def boolean_OR_NOT(index, term1, term2):
 
 def ranked_retrieval(index, query, directory):
     scores = defaultdict(int)
+    total_term_count = 0
     for term in preprocess(query):
+        preprocessed_content = preprocess(query)
+        terms = preprocessed_content
+        total_term_count += len(terms)
+
         for document in index[term].keys():
-            scores[document] += tf_idf(index, term, document, directory)
+            scores[document] += tf_idf(index, term, document, directory, total_term_count)
     return sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
-def tf_idf(index, term, document, directory):
-    tf = index[term][document]
+def tf_idf(index, term, document, directory, num):
+
+    tf = math.log(1+index[term][document]/doc_len[document])
     idf = math.log(len(os.listdir(directory)) / len(index[term]))
+    #print('tf=',tf,', idf=',idf,'tf-idf=',tf*idf, 'term=',term, 'num=',index[term][document],'/',doc_len[document],'document=',document)
     return tf * idf
 
 
@@ -84,9 +91,10 @@ def main():
 
     # Ranked retrieval
     print("\nRanked retrieval:")
-    print("Query: 'free text query'")
-    print(ranked_retrieval(index, "hello world free text", directory))
+    query = input('input free text query : ')
 
+    print("Query:",query)
+    print(ranked_retrieval(index, query, directory))
 if __name__ == "__main__":
     main()
 
